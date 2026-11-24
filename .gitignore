@@ -20,3 +20,5 @@ env/
 *.temp
 .DS_Store
 Thumbs.db
+
+build/

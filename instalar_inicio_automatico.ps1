@@ -1,4 +1,3 @@
-
 # ============================================
 # ORGANIZADOR AUTOMATICO - INICIO DE WINDOWS
 # ============================================
@@ -7,39 +6,19 @@ $NombreTarea = "Organizador Automatico de Descargas"
 
 $CarpetaProyecto = Split-Path -Parent $MyInvocation.MyCommand.Path
 
-$ScriptPython = Join-Path $CarpetaProyecto "organizador_descargas.py"
+$Ejecutable = Join-Path $CarpetaProyecto "dist\OrganizadorDescargas.exe"
 
-# Buscar Python automaticamente
-$Python = (Get-Command python.exe -ErrorAction SilentlyContinue).Source
-
-if (-not $Python) {
-    $Python = (Get-Command py.exe -ErrorAction SilentlyContinue).Source
-}
-
-if (-not $Python) {
-    Write-Host "ERROR: No se encontro Python."
+# Comprobar que exista el ejecutable
+if (-not (Test-Path $Ejecutable)) {
+    Write-Host "ERROR: No se encuentra OrganizadorDescargas.exe"
+    Write-Host "Ruta esperada: $Ejecutable"
     Read-Host "Presiona Enter para salir"
     exit 1
 }
 
-# Buscar pythonw.exe
-$PythonW = Join-Path (Split-Path $Python) "pythonw.exe"
-
-if (-not (Test-Path $PythonW)) {
-    $PythonW = $Python
-}
-
-# Comprobar que exista el script
-if (-not (Test-Path $ScriptPython)) {
-    Write-Host "ERROR: No se encuentra organizador_descargas.py"
-    Read-Host "Presiona Enter para salir"
-    exit 1
-}
-
-# Crear accion
+# Crear accion: ejecutar el EXE
 $Accion = New-ScheduledTaskAction `
-    -Execute $PythonW `
-    -Argument "`"$ScriptPython`"" `
+    -Execute $Ejecutable `
     -WorkingDirectory $CarpetaProyecto
 
 # Iniciar al iniciar sesion
