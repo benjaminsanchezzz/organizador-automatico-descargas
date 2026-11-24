@@ -1,5 +1,7 @@
 import shutil
 import time
+import ctypes
+import os
 from pathlib import Path
 
 # ==================================================
@@ -7,7 +9,25 @@ from pathlib import Path
 # ==================================================
 
 # Tu carpeta real de Descargas
-DESCARGAS = Path(r"D:\Datos Usuario\Descargas")
+def obtener_carpeta_descargas():
+    import winreg
+
+    try:
+        with winreg.OpenKey(
+            winreg.HKEY_CURRENT_USER,
+            r"Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders"
+        ) as key:
+            ruta, _ = winreg.QueryValueEx(
+                key,
+                "{374DE290-123F-4565-9164-39C4925E467B}"
+            )
+
+        return Path(os.path.expandvars(ruta))
+
+    except Exception:
+        return Path.home() / "Downloads"
+
+DESCARGAS = obtener_carpeta_descargas()
 
 # Carpeta donde se organizarán los archivos
 DESTINO = DESCARGAS / "organizador"
@@ -203,10 +223,11 @@ def main():
         return
 
     print("[FUNCIONANDO] Organizador iniciado.")
-    print("Presioná CTRL + C para detener.")
+    print("Presioná CTRL + SHIFT + F12 para detener.")
     print("=" * 45)
 
     try:
+        print("Para detener el organizador: CTRL + SHIFT + F12")
 
         while True:
 
@@ -214,9 +235,25 @@ def main():
 
             print(f"\nPróxima revisión en {INTERVALO} segundos...\n")
 
-            time.sleep(INTERVALO)
+            inicio = time.time()
+
+            while time.time() - inicio < INTERVALO:
+
+                ctrl = ctypes.windll.user32.GetAsyncKeyState(0x11) & 0x8000
+                shift = ctypes.windll.user32.GetAsyncKeyState(0x10) & 0x8000
+                f12 = ctypes.windll.user32.GetAsyncKeyState(0x7B) & 0x8000
+
+                if ctrl and shift and f12:
+                    raise KeyboardInterrupt
+
+                time.sleep(0.1)
 
     except KeyboardInterrupt:
+
+        print("\n")
+        print("=" * 45)
+        print("Organizador detenido correctamente.")
+        print("=" * 45)
 
         print("\n")
         print("=" * 45)
@@ -230,3 +267,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
