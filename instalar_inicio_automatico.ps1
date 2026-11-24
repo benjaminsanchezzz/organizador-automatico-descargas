@@ -1,53 +1,56 @@
+
 # ============================================
 # ORGANIZADOR AUTOMATICO - INICIO DE WINDOWS
 # ============================================
 
 $NombreTarea = "Organizador Automatico de Descargas"
 
-$CarpetaProyecto = "C:\organizador"
+$CarpetaProyecto = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 $ScriptPython = Join-Path $CarpetaProyecto "organizador_descargas.py"
 
-$Python = "C:\Users\Usuario\AppData\Local\Python\pythoncore-3.15-64\python.exe"
+# Buscar Python automaticamente
+$Python = (Get-Command python.exe -ErrorAction SilentlyContinue).Source
 
-$PythonW = "C:\Users\Usuario\AppData\Local\Python\pythoncore-3.15-64\pythonw.exe"
-
-# Comprobar que exista el script
-if (-not (Test-Path $ScriptPython)) {
-    Write-Host "ERROR: No se encuentra el archivo Python:"
-    Write-Host $ScriptPython
-    Read-Host "Presioná Enter para salir"
-    exit
+if (-not $Python) {
+    $Python = (Get-Command py.exe -ErrorAction SilentlyContinue).Source
 }
 
-# Comprobar Python
-if (-not (Test-Path $Python)) {
-    Write-Host "ERROR: No se encontró Python:"
-    Write-Host $Python
-    Read-Host "Presioná Enter para salir"
-    exit
+if (-not $Python) {
+    Write-Host "ERROR: No se encontro Python."
+    Read-Host "Presiona Enter para salir"
+    exit 1
 }
 
-# Si no existe pythonw, usar python
+# Buscar pythonw.exe
+$PythonW = Join-Path (Split-Path $Python) "pythonw.exe"
+
 if (-not (Test-Path $PythonW)) {
     $PythonW = $Python
 }
 
-# Crear acción
+# Comprobar que exista el script
+if (-not (Test-Path $ScriptPython)) {
+    Write-Host "ERROR: No se encuentra organizador_descargas.py"
+    Read-Host "Presiona Enter para salir"
+    exit 1
+}
+
+# Crear accion
 $Accion = New-ScheduledTaskAction `
     -Execute $PythonW `
     -Argument "`"$ScriptPython`"" `
     -WorkingDirectory $CarpetaProyecto
 
-# Activar al iniciar sesión en Windows
+# Iniciar al iniciar sesion
 $Trigger = New-ScheduledTaskTrigger -AtLogOn
 
-# Configuración de la tarea
+# Configuracion
 $Configuracion = New-ScheduledTaskSettingsSet `
     -StartWhenAvailable `
     -ExecutionTimeLimit ([TimeSpan]::Zero)
 
-# Registrar la tarea
+# Registrar tarea
 Register-ScheduledTask `
     -TaskName $NombreTarea `
     -Action $Accion `
